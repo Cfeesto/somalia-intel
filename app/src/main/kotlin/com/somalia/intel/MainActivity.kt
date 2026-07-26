@@ -15,17 +15,33 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.work.*
+import com.somalia.intel.data.sync.RefreshWorker
 import com.somalia.intel.ui.*
+import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { SomaliaIntelApp() }
+        scheduleRefresh()
+        setContent { SomaliaIntelApp(MainViewModel.factory(applicationContext)) }
+    }
+
+    private fun scheduleRefresh() {
+        val request = PeriodicWorkRequestBuilder<RefreshWorker>(15, TimeUnit.MINUTES)
+            .setConstraints(Constraints(NetworkType.CONNECTED))
+            .build()
+        WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
+            "somalia_refresh",
+            ExistingPeriodicWorkPolicy.KEEP,
+            request,
+        )
     }
 }
 
 @Composable
-fun SomaliaIntelApp(vm: MainViewModel = viewModel()) {
+fun SomaliaIntelApp(factory: androidx.lifecycle.ViewModelProvider.Factory) {
+    val vm    = viewModel<MainViewModel>(factory = factory)
     val state by vm.state.collectAsStateWithLifecycle()
     var tab   by remember { mutableIntStateOf(0) }
 
@@ -35,32 +51,32 @@ fun SomaliaIntelApp(vm: MainViewModel = viewModel()) {
             bottomBar = {
                 NavigationBar(containerColor = Color(0xFF0D1520), contentColor = Color(0xFF4FC3F7)) {
                     NavigationBarItem(
-                        selected  = tab == 0,
-                        onClick   = { tab = 0 },
-                        icon      = { Icon(Icons.Default.Article, null) },
-                        label     = { Text("News") },
-                        colors    = navColors(),
+                        selected = tab == 0,
+                        onClick  = { tab = 0 },
+                        icon     = { Icon(Icons.Default.Article, null) },
+                        label    = { Text("News") },
+                        colors   = navColors(),
                     )
                     NavigationBarItem(
-                        selected  = tab == 1,
-                        onClick   = { tab = 1 },
-                        icon      = { Icon(Icons.Default.Map, null) },
-                        label     = { Text("Map") },
-                        colors    = navColors(),
+                        selected = tab == 1,
+                        onClick  = { tab = 1 },
+                        icon     = { Icon(Icons.Default.Map, null) },
+                        label    = { Text("Map") },
+                        colors   = navColors(),
                     )
                     NavigationBarItem(
-                        selected  = tab == 2,
-                        onClick   = { tab = 2 },
-                        icon      = { Icon(Icons.Default.Psychology, null) },
-                        label     = { Text("Brief") },
-                        colors    = navColors(),
+                        selected = tab == 2,
+                        onClick  = { tab = 2 },
+                        icon     = { Icon(Icons.Default.Psychology, null) },
+                        label    = { Text("Brief") },
+                        colors   = navColors(),
                     )
                 }
             }
         ) { padding ->
             Box(Modifier.padding(padding).fillMaxSize()) {
                 when (tab) {
-                    0 -> NewsScreen(state, onFilter = vm::setFilter, onRefresh = vm::refresh)
+                    0 -> NewsScreen(state, onFilter = vm::setFilter, onSearch = vm::setSearch, onRefresh = vm::refresh)
                     1 -> MapScreen()
                     2 -> BriefScreen(state, onGenerate = vm::generateBrief, onSaveKey = vm::setApiKey)
                 }

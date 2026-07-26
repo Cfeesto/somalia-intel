@@ -21,26 +21,21 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Cache Gradle
-        uses: actions/cache@v4
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ hashFiles('**/*.gradle*', '**/libs.versions.toml') }}
-          restore-keys: gradle-
-
-      - name: Make Gradle executable
-        run: chmod +x gradlew
+          gradle-version: '8.9'
+          cache-read-only: false
 
       - name: Decode keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/release.jks
 
       - name: Build release APK
-        run: ./gradlew assembleRelease
+        run: gradle assembleRelease
         env:
           JAVA_OPTS: "-Xmx4g"
+          GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -58,12 +53,14 @@ jobs:
           body: |
             🇸🇴 Somalia Intelligence Monitor
 
-            **What's included:**
+            **Features:**
             - Live news from Dalsan TV, Dawan TV, Garowe Online, Shabelle, VOA
             - Journalist feeds: Harun Maruf, Abdirizak Atosh, Mohamed Salh, Bakayle, Ali Aadan Muumin, Idiris Alteeso
+            - Article images with Coil, offline Room DB cache
+            - Source filter chips + full-text search
             - Interactive Somalia threat map (color-coded by risk zone)
             - AI Intelligence Brief (Claude API or local fallback)
-            - Auto-refresh every 15 minutes
+            - Background refresh every 15 minutes via WorkManager
           files: app/build/outputs/apk/release/app-release.apk
           draft: false
           prerelease: false

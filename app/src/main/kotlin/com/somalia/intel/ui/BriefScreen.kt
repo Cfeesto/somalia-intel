@@ -10,12 +10,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
 fun BriefScreen(state: AppState, onGenerate: () -> Unit, onSaveKey: (String) -> Unit) {
-    var keyInput by remember(state.claudeApiKey) { mutableStateOf(state.claudeApiKey) }
+    // Only pre-fill if user hasn't entered anything; show placeholder when key is saved
+    var keyInput by remember { mutableStateOf("") }
+    val savedKeyHint = if (state.claudeApiKey.isNotBlank())
+        "Key saved (${state.claudeApiKey.take(10)}…)" else ""
 
     Column(
         Modifier.fillMaxSize().background(Color(0xFF0A0E1A)).verticalScroll(rememberScrollState()),
@@ -34,23 +38,40 @@ fun BriefScreen(state: AppState, onGenerate: () -> Unit, onSaveKey: (String) -> 
             // API key card
             Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF131929))) {
                 Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Claude API Key", color = Color(0xFF4FC3F7), fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                    Text("Optional — leave blank for local analysis.", color = Color(0xFF8899AA), fontSize = 11.sp)
+                    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically) {
+                        Text("Claude API Key", color = Color(0xFF4FC3F7), fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                        if (savedKeyHint.isNotBlank()) {
+                            Surface(shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp),
+                                color = Color(0xFF0D47A1).copy(alpha = 0.4f)) {
+                                Text(savedKeyHint, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    fontSize = 9.sp, color = Color(0xFF4FC3F7))
+                            }
+                        }
+                    }
+                    Text("Required for AI-powered analysis.", color = Color(0xFF8899AA), fontSize = 11.sp)
                     OutlinedTextField(
-                        value         = keyInput,
-                        onValueChange = { keyInput = it },
-                        modifier      = Modifier.fillMaxWidth(),
-                        label         = { Text("sk-ant-…", fontSize = 11.sp) },
-                        singleLine    = true,
-                        colors        = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor   = Color(0xFF4FC3F7),
-                            unfocusedBorderColor = Color(0xFF2A3A4A),
-                            focusedTextColor     = Color.White,
-                            unfocusedTextColor   = Color.White,
+                        value                  = keyInput,
+                        onValueChange          = { keyInput = it },
+                        modifier               = Modifier.fillMaxWidth(),
+                        placeholder            = { Text("sk-ant-…", fontSize = 11.sp, color = Color(0xFF8899AA)) },
+                        singleLine             = true,
+                        visualTransformation   = PasswordVisualTransformation(),
+                        colors                 = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor      = Color(0xFF4FC3F7),
+                            unfocusedBorderColor    = Color(0xFF2A3A4A),
+                            focusedTextColor        = Color.White,
+                            unfocusedTextColor      = Color.White,
+                            focusedContainerColor   = Color(0xFF0D1520),
+                            unfocusedContainerColor = Color(0xFF0D1520),
                         ),
                     )
-                    Button(onClick = { onSaveKey(keyInput) }, modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1565C0))) {
+                    Button(
+                        onClick  = { onSaveKey(keyInput); keyInput = "" },
+                        enabled  = keyInput.isNotBlank(),
+                        modifier = Modifier.fillMaxWidth(),
+                        colors   = ButtonDefaults.buttonColors(containerColor = Color(0xFF1565C0)),
+                    ) {
                         Text("Save Key")
                     }
                 }
@@ -68,7 +89,10 @@ fun BriefScreen(state: AppState, onGenerate: () -> Unit, onSaveKey: (String) -> 
                     Spacer(Modifier.width(8.dp))
                     Text("Analyzing ${state.articles.size} headlines…")
                 } else {
-                    Text("Generate Intelligence Brief", fontWeight = FontWeight.Bold)
+                    Text(
+                        if (state.claudeApiKey.isBlank()) "Generate Local Summary" else "Generate AI Intelligence Brief",
+                        fontWeight = FontWeight.Bold,
+                    )
                 }
             }
 

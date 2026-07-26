@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Somalia Intel launcher icon foreground.
+    108×108dp canvas — content in the 72×72dp safe zone (18dp padding).
+    White 5-pointed star (Somalia flag) on dark navy background.
+    Outer radius 30, inner radius 12, center (54,54).
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Outer glow ring -->
+    <path
+        android:fillColor="#1A4FC3F7"
+        android:pathData="M54,18 A36,36 0 1,1 53.999,18 Z" />
+
+    <!-- Somalia flag 5-pointed star (white) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="
+            M 54,24
+            L 61.05,44.29
+            L 82.53,44.73
+            L 65.41,57.71
+            L 71.63,78.27
+            L 54,66
+            L 36.37,78.27
+            L 42.59,57.71
+            L 25.47,44.73
+            L 46.95,44.29
+            Z" />
+
+    <!-- Subtle accent dot — intel/surveillance motif -->
+    <path
+        android:fillColor="#4FC3F7"
+        android:pathData="M54,51 A3,3 0 1,1 53.999,51 Z" />
+
+</vector>
