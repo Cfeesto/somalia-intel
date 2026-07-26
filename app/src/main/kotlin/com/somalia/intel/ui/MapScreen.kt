@@ -20,19 +20,20 @@ import androidx.compose.ui.viewinterop.AndroidView
 @Composable
 fun MapScreen() {
     Column(Modifier.fillMaxSize().background(Color(0xFF0A0E1A))) {
-        // Header
         Row(
             Modifier.fillMaxWidth().background(Color(0xFF0D1520)).padding(14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text("🗺️  SOMALIA THREAT MAP", color = Color(0xFF4FC3F7), fontWeight = FontWeight.Bold, fontSize = 15.sp)
         }
-        // WebView map
         AndroidView(
             factory = { ctx ->
                 WebView(ctx).apply {
-                    settings.javaScriptEnabled = true
-                    settings.domStorageEnabled  = true
+                    settings.javaScriptEnabled                = true
+                    settings.domStorageEnabled                 = true
+                    @Suppress("DEPRECATION")
+                    settings.allowUniversalAccessFromFileURLs  = true  // needed for Leaflet tiles from file:// origin
+                    settings.allowFileAccess                   = true
                     webChromeClient = WebChromeClient()
                     webViewClient   = WebViewClient()
                     loadUrl("file:///android_asset/map.html")
