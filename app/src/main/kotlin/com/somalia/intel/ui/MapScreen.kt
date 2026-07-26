@@ -29,14 +29,14 @@ fun MapScreen() {
         AndroidView(
             factory = { ctx ->
                 WebView(ctx).apply {
-                    settings.javaScriptEnabled                = true
-                    settings.domStorageEnabled                 = true
-                    @Suppress("DEPRECATION")
-                    settings.allowUniversalAccessFromFileURLs  = true  // needed for Leaflet tiles from file:// origin
-                    settings.allowFileAccess                   = true
+                    settings.javaScriptEnabled = true
+                    settings.domStorageEnabled = true
+                    settings.allowFileAccess   = true
                     webChromeClient = WebChromeClient()
                     webViewClient   = WebViewClient()
-                    loadUrl("file:///android_asset/map.html")
+                    // ponytail: loadDataWithBaseURL lets relative asset:// refs resolve correctly; no CDN needed
+                    val html = ctx.assets.open("map.html").bufferedReader().use { it.readText() }
+                    loadDataWithBaseURL("file:///android_asset/", html, "text/html", "utf-8", null)
                 }
             },
             modifier = Modifier.fillMaxSize(),
