@@ -1,0 +1,71 @@
+name: Build Somalia Intel APK
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/libs.versions.toml') }}
+          restore-keys: gradle-
+
+      - name: Make Gradle executable
+        run: chmod +x gradlew
+
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/release.jks
+
+      - name: Build release APK
+        run: ./gradlew assembleRelease
+        env:
+          JAVA_OPTS: "-Xmx4g"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: somalia-intel-apk
+          path: app/build/outputs/apk/release/app-release.apk
+          retention-days: 30
+
+      - name: Create GitHub Release
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: "Somalia Intel v${{ github.run_number }}"
+          body: |
+            🇸🇴 Somalia Intelligence Monitor
+
+            **What's included:**
+            - Live news from Dalsan TV, Dawan TV, Garowe Online, Shabelle, VOA
+            - Journalist feeds: Harun Maruf, Abdirizak Atosh, Mohamed Salh, Bakayle, Ali Aadan Muumin, Idiris Alteeso
+            - Interactive Somalia threat map (color-coded by risk zone)
+            - AI Intelligence Brief (Claude API or local fallback)
+            - Auto-refresh every 15 minutes
+          files: app/build/outputs/apk/release/app-release.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

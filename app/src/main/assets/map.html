@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+<title>Somalia Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#0A0E1A; font-family:sans-serif; }
+  #map { width:100vw; height:100vh; }
+  .legend { background:rgba(10,14,26,0.9); color:#E0E0E0; padding:10px; border-radius:8px; font-size:12px; }
+  .legend h4 { color:#4FC3F7; margin-bottom:6px; font-size:13px; }
+  .legend-item { display:flex; align-items:center; gap:6px; margin:3px 0; }
+  .dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+const map = L.map('map', {
+  center: [5.5, 46.5],
+  zoom: 6,
+  zoomControl: true,
+  attributionControl: false,
+}).setView([5.5, 46.5], 6);
+
+// Dark tile layer
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  maxZoom: 19,
+}).addTo(map);
+
+// ── Somalia regions with risk colors ────────────────────────────────────────
+const regions = [
+  { name:"Banaadir (Mogadishu)", lat:2.05, lng:45.34, risk:"high",    pop:"2.4M", note:"Capital, frequent IED & VBIED attacks" },
+  { name:"Lower Shabelle",       lat:1.80, lng:44.50, risk:"high",    pop:"1.2M", note:"Al-Shabaab stronghold areas" },
+  { name:"Middle Shabelle",      lat:3.30, lng:45.60, risk:"high",    pop:"0.7M", note:"Active conflict zone" },
+  { name:"Gedo",                 lat:3.50, lng:42.20, risk:"high",    pop:"0.5M", note:"Cross-border militant activity" },
+  { name:"Bay",                  lat:3.10, lng:43.60, risk:"high",    pop:"0.9M", note:"Al-Shabaab presence" },
+  { name:"Lower Juba",           lat:0.40, lng:42.00, risk:"high",    pop:"0.3M", note:"Kismayo — strategic port" },
+  { name:"Hiraan",               lat:4.30, lng:45.30, risk:"medium",  pop:"0.6M", note:"Clan conflict, some AS activity" },
+  { name:"Galgaduud",            lat:5.60, lng:46.80, risk:"medium",  pop:"0.5M", note:"Active clan disputes" },
+  { name:"Mudug",                lat:6.80, lng:47.80, risk:"medium",  pop:"0.6M", note:"Galmudug state, improving" },
+  { name:"Nugaal",               lat:8.20, lng:49.20, risk:"low",     pop:"0.3M", note:"Puntland — relatively stable" },
+  { name:"Bari",                 lat:10.50,lng:50.80, risk:"low",     pop:"0.6M", note:"Bosaso — Puntland capital" },
+  { name:"Woqooyi Galbeed",      lat:9.56, lng:44.06, risk:"low",     pop:"1.0M", note:"Hargeisa — Somaliland capital" },
+  { name:"Togdheer",             lat:9.80, lng:45.50, risk:"low",     pop:"0.4M", note:"Somaliland — stable" },
+  { name:"Sanaag",               lat:10.70,lng:47.40, risk:"medium",  pop:"0.3M", note:"Disputed Somaliland/Puntland" },
+];
+
+const riskColor = { high:"#EF5350", medium:"#FFB300", low:"#66BB6A" };
+const riskRadius = { high:22000, medium:18000, low:14000 };
+
+regions.forEach(r => {
+  L.circle([r.lat, r.lng], {
+    color:       riskColor[r.risk],
+    fillColor:   riskColor[r.risk],
+    fillOpacity: 0.25,
+    weight:      1.5,
+    radius:      riskRadius[r.risk],
+  }).addTo(map).bindPopup(`
+    <b style="color:#4FC3F7">${r.name}</b><br/>
+    <span style="color:${riskColor[r.risk]}">● ${r.risk.toUpperCase()} RISK</span><br/>
+    Population: ${r.pop}<br/>
+    ${r.note}
+  `);
+});
+
+// ── Key locations ────────────────────────────────────────────────────────────
+const locations = [
+  { name:"Mogadishu",  lat:2.05,  lng:45.34, icon:"🏛️", type:"capital" },
+  { name:"Kismayo",    lat:0.36,  lng:42.55, icon:"⚓", type:"city" },
+  { name:"Bosaso",     lat:11.28, lng:49.18, icon:"⚓", type:"city" },
+  { name:"Hargeisa",   lat:9.56,  lng:44.06, icon:"🏙️", type:"city" },
+  { name:"Baidoa",     lat:3.12,  lng:43.65, icon:"🏙️", type:"city" },
+  { name:"Beledweyne", lat:4.74,  lng:45.20, icon:"🏙️", type:"city" },
+  { name:"Garowe",     lat:8.41,  lng:48.48, icon:"🏙️", type:"capital" },
+  { name:"Galkaio",    lat:6.77,  lng:47.43, icon:"🏙️", type:"city" },
+];
+
+locations.forEach(loc => {
+  L.marker([loc.lat, loc.lng], {
+    icon: L.divIcon({
+      html: `<div style="font-size:18px;text-shadow:0 0 6px #000">${loc.icon}</div>`,
+      iconSize:[24,24], iconAnchor:[12,12],
+    })
+  }).addTo(map).bindPopup(`<b style="color:#4FC3F7">${loc.name}</b>`);
+});
+
+// ── Legend ───────────────────────────────────────────────────────────────────
+const legend = L.control({ position:'bottomleft' });
+legend.onAdd = () => {
+  const div = L.DomUtil.create('div','legend');
+  div.innerHTML = `
+    <h4>🇸🇴 Risk Level</h4>
+    <div class="legend-item"><div class="dot" style="background:#EF5350"></div> High Risk</div>
+    <div class="legend-item"><div class="dot" style="background:#FFB300"></div> Medium Risk</div>
+    <div class="legend-item"><div class="dot" style="background:#66BB6A"></div> Low Risk</div>
+  `;
+  return div;
+};
+legend.addTo(map);
+</script>
+</body>
+</html>
