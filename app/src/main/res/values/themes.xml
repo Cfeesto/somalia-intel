@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.SomaliaIntel" parent="Theme.Material3.DayNight.NoActionBar" />
+    <!-- ponytail: android:Theme.Black.NoTitleBar needs no extra dep; Compose owns the window -->
+    <style name="Theme.SomaliaIntel" parent="android:Theme.Black.NoTitleBar" />
 </resources>
